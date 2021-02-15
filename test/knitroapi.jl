@@ -610,7 +610,10 @@ end
     KNITRO.KN_set_var_primal_init_values(kc, [ 1.0, 5.0 ])
 
     # Add the residuals
-    KNITRO.KN_add_rsds(kc, 6)
+    nrsds = 6
+    KNITRO.KN_add_rsds(kc, nrsds)
+
+    @test KNITRO.KN_get_number_rsds(kc) == nrsds
 
     # Define callbacks
     cb = KNITRO.KN_add_lsq_eval_callback(kc, evalR)
@@ -668,6 +671,8 @@ end
     KNITRO.KN_set_cb_hess(kc, cb, KNITRO.KN_DENSE_ROWMAJOR, evalAll)
 
     KNITRO.KN_set_compcons(kc, [KNITRO.KN_CCTYPE_VARVAR], Int32[0], Int32[1])
+
+    @test KNITRO.KN_get_number_compcons(kc) == 1
 
     function newpt_callback(kc, x, lambda_, user_data)
         if KNITRO.KN_get_number_iters(kc) > 1

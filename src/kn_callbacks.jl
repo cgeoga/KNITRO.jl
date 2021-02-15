@@ -491,37 +491,10 @@ end
 ##################################################
 # Get callbacks info
 ##################################################
-function KN_get_number_FC_evals(m::Model)
-    fc_eval = Cint[0]
-    ret = @kn_ccall(get_number_FC_evals, Cint, (Ptr{Cvoid}, Ptr{Cint}),
-                    m.env, fc_eval)
-    _checkraise(ret)
-    return fc_eval[1]
-end
-
-function KN_get_number_GA_evals(m::Model)
-    fc_eval = Cint[0]
-    ret = @kn_ccall(get_number_GA_evals, Cint, (Ptr{Cvoid}, Ptr{Cint}),
-                    m.env, fc_eval)
-    _checkraise(ret)
-    return fc_eval[1]
-end
-
-function KN_get_number_H_evals(m::Model)
-    fc_eval = Cint[0]
-    ret = @kn_ccall(get_number_H_evals, Cint, (Ptr{Cvoid}, Ptr{Cint}),
-                    m.env, fc_eval)
-    _checkraise(ret)
-    return fc_eval[1]
-end
-
-function KN_get_number_HV_evals(m::Model)
-    fc_eval = Cint[0]
-    ret = @kn_ccall(get_number_HV_evals, Cint, (Ptr{Cvoid}, Ptr{Cint}),
-                    m.env, fc_eval)
-    _checkraise(ret)
-    return fc_eval[1]
-end
+@kn_get get_number_FC_evals Cint
+@kn_get get_number_GA_evals Cint
+@kn_get get_number_H_evals Cint
+@kn_get get_number_HV_evals Cint
 
 ##################################################
 # Residual callbacks
@@ -574,8 +547,6 @@ function KN_add_lsq_eval_callback(m::Model, rsdCallBack::Function)
 
     return cb
 end
-
-
 
 function KN_set_cb_rsd_jac(m::Model, cb::CallbackContext, nnzJ::Integer, evalRJ::Function;
                            jacIndexRsds=C_NULL, jacIndexVars=C_NULL)

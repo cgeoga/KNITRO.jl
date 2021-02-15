@@ -105,29 +105,4 @@ end
 ##################################################
 # Residuals constants
 ##################################################
-function KN_add_rsd_constants(m::Model, indexRsds::Vector{Cint}, constants::Vector{Cdouble})
-    nnc = length(constants)
-    @assert length(indexRsds) == length(constant)
-    ret = @kn_ccall(add_rsd_constants, Cint,
-                    (Ptr{Cvoid}, Cint, Ptr{Cint}, Ptr{Cdouble}),
-                    m.env,
-                    nnc,
-                    indexRsds,
-                    constants)
-    _checkraise(ret)
-end
-
-function KN_add_rsd_constants(m::Model, constants::Vector{Cdouble})
-    nnc = length(constants)
-    ret = @kn_ccall(add_rsd_constants_all, Cint,
-                    (Ptr{Cvoid}, Ptr{Cdouble}),
-                    m.env, constants)
-    _checkraise(ret)
-end
-
-function KN_add_rsd_constant(m::Model, indexRsd::Integer, constant::Cdouble)
-    ret = @kn_ccall(add_rsd_constant, Cint,
-                    (Ptr{Cvoid}, Cint, Cdouble),
-                    m.env, indexRsd, constant)
-    _checkraise(ret)
-end
+@define_setters add_rsd_constant Cdouble

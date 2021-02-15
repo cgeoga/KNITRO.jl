@@ -15,16 +15,82 @@ macro kn_ccall(func, args...)
     end
 end
 
-macro define_getters(function_name)
+macro define_getters(function_name, type)
     fname = Symbol("KN_" * string(function_name))
     quote
         function $(esc(fname))(kc::Model, index::Vector{Cint})
-            result = zeros(Cdouble, length(index))
+            result = zeros($type, length(index))
             ret = @kn_ccall($function_name, Cint,
-                            (Ptr{Cvoid}, Cint, Ptr{Cint}, Ptr{Cdouble}),
+                            (Ptr{Cvoid}, Cint, Ptr{Cint}, Ptr{$type}),
                             kc.env, length(index), index, result)
             _checkraise(ret)
             return result
+        end
+    end
+end
+
+macro define_setters(function_name, type)
+    name_singular = string(function_name)
+    # Names of functions in Julia wrapper
+    if endswith(name_singular, 'y')  # plural of "y" is "ies"
+        name_plural = name_singular[1:end-1] * "ies"
+    else
+        name_plural = name_singular * "s"
+    end
+    fname      = Symbol("KN_" * name_plural)
+    fnameshort = Symbol("KN_" * name_singular)
+    # Names of C function in knitro.h
+    c_fname      = Symbol(name_singular)
+    c_fnames     = Symbol(name_plural)
+    c_fnames_all = Symbol(name_plural * "_all")
+
+    quote
+        function $(esc(fname))(kc::Model, values::Vector{$type})
+            ret = @kn_ccall($(c_fnames_all), Cint,
+                            (Ptr{Cvoid}, Ptr{$type}),
+                            kc.env, values)
+            _checkraise(ret)
+            return
+        end
+        function $(esc(fname))(kc::Model, index::Vector{Cint}, values::Vector{$type})
+            @assert length(index) == length(values)
+            ret = @kn_ccall($(c_fnames), Cint,
+                            (Ptr{Cvoid}, Cint, Ptr{Cint}, Ptr{$type}),
+                            kc.env, length(index), index, values)
+            _checkraise(ret)
+            return
+        end
+        function $(esc(fname))(kc::Model, index::Integer, value::$type)
+            ret = @kn_ccall($(c_fname), Cint,
+                            (Ptr{Cvoid}, Cint, $type),
+                            kc.env, index, value)
+            _checkraise(ret)
+            return
+        end
+        $(esc(fnameshort))(kc::Model, index::Integer, value::$type) = $(esc(fname))(kc, index, value)
+    end
+end
+
+macro kn_set(function_name, type)
+    fname = Symbol("KN_" * string(function_name))
+    quote
+        function $(esc(fname))(m::Model, val::$type)
+            ret = @kn_ccall($function_name, Cint, (Ptr{Cvoid}, $type),
+                            m.env, val)
+            _checkraise(ret)
+        end
+    end
+end
+
+macro kn_get(function_name, type)
+    fname = Symbol("KN_" * string(function_name))
+    quote
+        function $(esc(fname))(m::Model)
+            val = zeros($type, 1)
+            ret = @kn_ccall($function_name, Cint, (Ptr{Cvoid}, Ptr{$type}),
+                            m.env, val)
+            _checkraise(ret)
+            return val[1]
         end
     end
 end
